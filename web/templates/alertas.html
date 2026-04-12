@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Alertas Sectoriales{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Alertas Sectoriales</h1>
+        <p>Estado de las fuentes de información monitoreadas</p>
+    </div>
+</div>
+<div class="container">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Entidad</th>
+                    <th>Recurso</th>
+                    <th>Descripción</th>
+                    <th>Categoría</th>
+                    <th>Última verificación</th>
+                    <th>Estado</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for alert in alerts %}
+                <tr>
+                    <td><span class="entity-{{ alert.entity|lower }}">{{ alert.entity }}</span></td>
+                    <td><strong>{{ alert.name }}</strong></td>
+                    <td>{{ alert.description }}</td>
+                    <td><span class="badge {{ alert.category }}">{{ alert.category }}</span></td>
+                    <td>{{ alert.date if alert.date else '-' }}</td>
+                    <td>
+                        {% if alert.status == 'Activo' %}
+                            <span class="badge activo">Activo</span>
+                        {% else %}
+                            <span class="badge error">{{ alert.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td><a href="{{ alert.url }}" target="_blank" class="url-link">Acceder</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p style="color:var(--texto-claro); font-size:0.85rem;">Total: {{ alerts|length }} fuentes monitoreadas</p>
+</div>
+{% endblock %}

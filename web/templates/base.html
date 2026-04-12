@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Legislación Monitor{% endblock %} - CODANOR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul-principal: #178DC2;
+            --azul-oscuro: #1F4E79;
+            --verde-acento: #12A79D;
+            --verde-medio: #2E7D32;
+            --verde-claro: #4CAF50;
+            --verde-teal: #00897B;
+            --naranja: #EF6C00;
+            --purpura: #6A1B9A;
+            --rojo: #C62828;
+            --gris-claro: #f4f7f9;
+            --gris-borde: #e0e6ed;
+            --texto: #333;
+            --texto-claro: #7f8c8d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Nunito Sans', sans-serif; background: var(--gris-claro); color: var(--texto); }
+        
+        /* NAV */
+        .navbar { background: var(--azul-oscuro); padding: 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+        .navbar .container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+        .navbar .logo { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.4rem; color: #fff; text-decoration: none; padding: 15px 0; }
+        .navbar .logo span { color: var(--verde-acento); }
+        .navbar nav { display: flex; gap: 0; }
+        .navbar nav a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 18px 16px; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; border-bottom: 3px solid transparent; }
+        .navbar nav a:hover, .navbar nav a.active { color: #fff; background: rgba(255,255,255,0.08); border-bottom-color: var(--verde-acento); }
+        
+        /* CONTAINER */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .page-header { background: linear-gradient(135deg, var(--azul-principal), var(--azul-oscuro)); color: #fff; padding: 30px 0; margin-bottom: 30px; }
+        .page-header h1 { font-family: 'Poppins', sans-serif; font-size: 1.8rem; font-weight: 700; }
+        .page-header p { opacity: 0.85; margin-top: 5px; }
+        
+        /* CARDS */
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid var(--azul-principal); }
+        .card h3 { font-family: 'Poppins', sans-serif; font-size: 2rem; color: var(--azul-oscuro); }
+        .card p { color: var(--texto-claro); font-size: 0.85rem; margin-top: 4px; }
+        .card.green { border-left-color: var(--verde-acento); }
+        .card.orange { border-left-color: var(--naranja); }
+        .card.purple { border-left-color: var(--purpura); }
+        
+        /* TABLE */
+        .table-container { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow-x: auto; margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        thead { background: var(--azul-oscuro); color: #fff; }
+        th { padding: 12px 16px; text-align: left; font-weight: 600; font-family: 'Poppins', sans-serif; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 10px 16px; border-bottom: 1px solid var(--gris-borde); }
+        tr:hover { background: rgba(23,141,194,0.04); }
+        
+        /* BADGES */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; color: #fff; }
+        .badge.medio_ambiente { background: var(--verde-medio); }
+        .badge.residuos { background: var(--verde-claro); }
+        .badge.cambio_climatico { background: var(--verde-teal); }
+        .badge.ciberseguridad { background: var(--azul-principal); }
+        .badge.privacidad { background: var(--purpura); }
+        .badge.seguridad_informacion { background: var(--naranja); }
+        .badge.proteccion_datos { background: var(--purpura); }
+        .badge.activo { background: var(--verde-acento); }
+        .badge.error { background: var(--rojo); }
+        .badge.tramitacion { background: var(--naranja); }
+        .badge.vigente { background: var(--verde-acento); }
+        
+        /* BUTTONS */
+        .btn { display: inline-block; padding: 10px 24px; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; cursor: pointer; border: none; }
+        .btn-primary { background: var(--azul-principal); color: #fff; }
+        .btn-primary:hover { background: var(--azul-oscuro); }
+        .btn-green { background: var(--verde-acento); color: #fff; }
+        .btn-green:hover { background: #0e8c84; }
+        .actions { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        
+        /* CATEGORY FILTERS */
+        .filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filters a { padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 600; color: var(--texto); background: #fff; border: 1px solid var(--gris-borde); transition: all 0.2s; }
+        .filters a:hover, .filters a.active { background: var(--azul-principal); color: #fff; border-color: var(--azul-principal); }
+        
+        /* ENTITY COLORS */
+        .entity-aepd { color: var(--azul-principal); font-weight: 700; }
+        .entity-apdcat { color: var(--purpura); font-weight: 700; }
+        .entity-enisa { color: var(--azul-principal); font-weight: 700; }
+        .entity-ccn-cert { color: var(--naranja); font-weight: 700; }
+        .entity-incibe { color: var(--naranja); font-weight: 700; }
+        .entity-acc { color: var(--verde-teal); font-weight: 700; }
+        
+        /* ALERT BOX */
+        .alert-box { padding: 16px 24px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; }
+        .alert-box.success { background: #e8f5e9; color: var(--verde-medio); border-left: 4px solid var(--verde-acento); }
+        
+        /* FOOTER */
+        footer { background: var(--azul-oscuro); color: rgba(255,255,255,0.6); padding: 20px 0; margin-top: 40px; text-align: center; font-size: 0.8rem; }
+        footer a { color: var(--verde-acento); text-decoration: none; }
+        
+        /* URL */
+        .url-link { color: var(--azul-principal); text-decoration: none; word-break: break-all; font-size: 0.8rem; }
+        .url-link:hover { text-decoration: underline; }
+        
+        @media (max-width: 768px) {
+            .navbar .container { flex-direction: column; }
+            .navbar nav { flex-wrap: wrap; justify-content: center; }
+            .navbar nav a { padding: 12px 10px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <a href="/" class="logo">CODANOR <span>Legislación Monitor</span></a>
+            <nav>
+                <a href="/" class="{{ 'active' if request.path == '/' else '' }}">Dashboard</a>
+                <a href="/legislacion" class="{{ 'active' if '/legislacion' in request.path else '' }}">Legislación</a>
+                <a href="/alertas" class="{{ 'active' if request.path == '/alertas' else '' }}">Alertas Sectoriales</a>
+                <a href="/ejecutar" class="{{ 'active' if request.path == '/ejecutar' else '' }}">Ejecutar Monitor</a>
+                <a href="/exportar" class="btn-green" style="margin:8px 0; padding:8px 16px; border-radius:4px;">Exportar Excel</a>
+            </nav>
+        </div>
+    </header>
+    
+    {% block content %}{% endblock %}
+    
+    <footer>
+        <div class="container">
+            CODANOR - Legislación Monitor | <a href="https://www.codanor.com">www.codanor.com</a>
+        </div>
+    </footer>
+</body>
+</html>

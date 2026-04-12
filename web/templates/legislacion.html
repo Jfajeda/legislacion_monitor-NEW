@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Legislación{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Legislación</h1>
+        <p>{% if filter_category %}Categoría: {{ filter_category }}{% else %}Todas las normas monitoreadas{% endif %}</p>
+    </div>
+</div>
+<div class="container">
+    <div class="filters">
+        <a href="/legislacion" class="{{ 'active' if not filter_category else '' }}">Todas</a>
+        <a href="/legislacion/medio_ambiente" class="{{ 'active' if filter_category == 'medio_ambiente' else '' }}">Medio Ambiente</a>
+        <a href="/legislacion/residuos" class="{{ 'active' if filter_category == 'residuos' else '' }}">Residuos</a>
+        <a href="/legislacion/cambio_climatico" class="{{ 'active' if filter_category == 'cambio_climatico' else '' }}">Cambio Climático</a>
+        <a href="/legislacion/ciberseguridad" class="{{ 'active' if filter_category == 'ciberseguridad' else '' }}">Ciberseguridad</a>
+        <a href="/legislacion/privacidad" class="{{ 'active' if filter_category == 'privacidad' else '' }}">Privacidad</a>
+        <a href="/legislacion/seguridad_informacion" class="{{ 'active' if filter_category == 'seguridad_informacion' else '' }}">Seguridad Información</a>
+    </div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fuente</th>
+                    <th>Título</th>
+                    <th>Categoría</th>
+                    <th>Fecha</th>
+                    <th>Vigente</th>
+                    <th>N Norma</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for pub in publications %}
+                <tr>
+                    <td>{{ pub['source'] }}</td>
+                    <td><strong>{{ pub['title'] }}</strong></td>
+                    <td><span class="badge {{ pub['category'] }}">{{ pub['category'] }}</span></td>
+                    <td>{{ pub['date'] if pub['date'] else 'Pendiente' }}</td>
+                    <td>
+                        {% if pub['vigente'] == 'En tramitación' %}
+                            <span class="badge tramitacion">En tramitación</span>
+                        {% else %}
+                            <span class="badge vigente">Sí</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ pub['norma'] }}</strong></td>
+                    <td><a href="{{ pub['url'] }}" target="_blank" class="url-link">Ver norma</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p style="color:var(--texto-claro); font-size:0.85rem;">Total: {{ publications|length }} normas</p>
+</div>
+{% endblock %}

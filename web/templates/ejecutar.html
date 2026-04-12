@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Ejecutar Monitor{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Ejecutar Monitor</h1>
+        <p>Resultado de la verificación de normas</p>
+    </div>
+</div>
+<div class="container">
+    <div class="alert-box success">
+        Verificación completada: {{ new_count }} nuevas normas encontradas de {{ total }} verificadas.
+    </div>
+    
+    <div class="actions">
+        <a href="/legislacion" class="btn btn-primary">Ver legislación</a>
+        <a href="/ejecutar" class="btn btn-green">Ejecutar de nuevo</a>
+    </div>
+</div>
+{% endblock %}

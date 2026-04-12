@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Dashboard</h1>
+        <p>Panel de control de seguimiento normativo</p>
+    </div>
+</div>
+<div class="container">
+    <div class="cards">
+        <div class="card">
+            <h3>{{ total }}</h3>
+            <p>Total normas monitoreadas</p>
+        </div>
+        <div class="card green">
+            <h3>{{ vigentes }}</h3>
+            <p>Normas vigentes</p>
+        </div>
+        <div class="card orange">
+            <h3>{{ tramitacion }}</h3>
+            <p>En tramitación</p>
+        </div>
+        <div class="card purple">
+            <h3>{{ categories|length }}</h3>
+            <p>Categorías</p>
+        </div>
+    </div>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+        <div>
+            <h3 style="font-family:'Poppins'; margin-bottom:12px; color:var(--azul-oscuro);">Por categoría</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Categoría</th><th>Normas</th></tr></thead>
+                    <tbody>
+                    {% for cat in categories %}
+                        <tr>
+                            <td><a href="/legislacion/{{ cat['category'] }}" style="text-decoration:none;"><span class="badge {{ cat['category'] }}">{{ cat['category'] }}</span></a></td>
+                            <td><strong>{{ cat['count'] }}</strong></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div>
+            <h3 style="font-family:'Poppins'; margin-bottom:12px; color:var(--azul-oscuro);">Últimas incorporaciones</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Norma</th><th>Categoría</th></tr></thead>
+                    <tbody>
+                    {% for pub in recent %}
+                        <tr>
+                            <td><strong>{{ pub['title'] }}</strong></td>
+                            <td><span class="badge {{ pub['category'] }}">{{ pub['category'] }}</span></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
