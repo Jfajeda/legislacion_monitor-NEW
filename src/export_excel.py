@@ -8,11 +8,10 @@ def export_to_excel_formatted(db_path: str, output_path: str = None):
         import openpyxl
         from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
     except ImportError:
-        print("Instalando openpyxl...")
-        import subprocess
-        subprocess.run(['pip3', 'install', 'openpyxl'], capture_output=True)
-        import openpyxl
-        from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+        raise ImportError(
+            "openpyxl es necesario para exportar a Excel. "
+            "Instalar con: pip3 install openpyxl"
+        )
     
     Path('output').mkdir(exist_ok=True)
     if output_path is None:

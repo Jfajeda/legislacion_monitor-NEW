@@ -150,17 +150,23 @@ class Database:
                 'recent': [dict(r) for r in recent],
             }
     
-    def get_publications_by_category(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Get publications optionally filtered by category."""
+    def get_publications_by_category(self, category: Optional[str] = None,
+                                     order_by: str = 'default') -> List[Dict[str, Any]]:
+        """Get publications optionally filtered by category.
+        
+        order_by: 'default' ordena por category/source/title,
+                  'reciente' ordena por created_at DESC (últimas incorporaciones primero).
+        """
+        order_clause = 'created_at DESC' if order_by == 'reciente' else 'category, source, title'
         with self._get_conn() as conn:
             if category:
                 rows = conn.execute(
-                    'SELECT * FROM publications WHERE category = ? ORDER BY source, title',
+                    f'SELECT * FROM publications WHERE category = ? ORDER BY {order_clause}',
                     (category,)
                 ).fetchall()
             else:
                 rows = conn.execute(
-                    'SELECT * FROM publications ORDER BY category, source, title'
+                    f'SELECT * FROM publications ORDER BY {order_clause}'
                 ).fetchall()
             return [dict(row) for row in rows]
     

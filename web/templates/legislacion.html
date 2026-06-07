@@ -1,6 +1,33 @@
 {% extends "base.html" %}
 {% block title %}Legislación{% endblock %}
 {% block content %}
+<style>
+    .badge.nueva {
+        background: linear-gradient(135deg, #FF6B35, #F7C948);
+        color: #fff;
+        font-size: 0.65rem;
+        padding: 2px 8px;
+        margin-left: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        animation: pulso 2s ease-in-out 3;
+    }
+    @keyframes pulso {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    .orden-links { display: flex; gap: 8px; align-items: center; }
+    .orden-links span { font-size: 0.8rem; color: var(--texto-claro); font-weight: 600; }
+    .orden-links a {
+        font-size: 0.8rem; text-decoration: none; padding: 4px 12px;
+        border-radius: 14px; font-weight: 600; transition: all 0.2s;
+        color: var(--texto); background: #fff; border: 1px solid var(--gris-borde);
+    }
+    .orden-links a:hover, .orden-links a.active {
+        background: var(--azul-principal); color: #fff; border-color: var(--azul-principal);
+    }
+    .fecha-incorporacion { font-size: 0.8rem; color: var(--texto-claro); white-space: nowrap; }
+</style>
 <div class="page-header">
     <div class="container">
         <h1>Legislación</h1>
@@ -9,15 +36,23 @@
 </div>
 <div class="container">
     <div class="filters">
-        <a href="/legislacion" class="{{ 'active' if not filter_category else '' }}">Todas</a>
-        <a href="/legislacion/medio_ambiente" class="{{ 'active' if filter_category == 'medio_ambiente' else '' }}">Medio Ambiente</a>
-        <a href="/legislacion/residuos" class="{{ 'active' if filter_category == 'residuos' else '' }}">Residuos</a>
-        <a href="/legislacion/cambio_climatico" class="{{ 'active' if filter_category == 'cambio_climatico' else '' }}">Cambio Climático</a>
-        <a href="/legislacion/ciberseguridad" class="{{ 'active' if filter_category == 'ciberseguridad' else '' }}">Ciberseguridad</a>
-        <a href="/legislacion/privacidad" class="{{ 'active' if filter_category == 'privacidad' else '' }}">Privacidad</a>
-        <a href="/legislacion/seguridad_informacion" class="{{ 'active' if filter_category == 'seguridad_informacion' else '' }}">Seguridad Información</a>
+        <a href="/legislacion{{ '?orden=' + orden if orden != 'default' else '' }}" class="{{ 'active' if not filter_category else '' }}">Todas</a>
+        {% for cat in ['medio_ambiente', 'residuos', 'cambio_climatico', 'ciberseguridad', 'privacidad', 'seguridad_informacion'] %}
+        <a href="/legislacion/{{ cat }}{{ '?orden=' + orden if orden != 'default' else '' }}" class="{{ 'active' if filter_category == cat else '' }}">{{ cat|replace('_', ' ')|title }}</a>
+        {% endfor %}
     </div>
-    
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+        <div class="orden-links">
+            <span>Ordenar:</span>
+            <a href="{{ request.path }}" class="{{ 'active' if orden == 'default' else '' }}">Por categoría</a>
+            <a href="{{ request.path }}?orden=reciente" class="{{ 'active' if orden == 'reciente' else '' }}">Por incorporación</a>
+        </div>
+        <p style="color:var(--texto-claro); font-size:0.85rem; margin:0;">
+            Total: {{ publications|length }} normas
+        </p>
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
@@ -28,14 +63,22 @@
                     <th>Fecha</th>
                     <th>Vigente</th>
                     <th>N Norma</th>
+                    <th>Incorporada</th>
                     <th>URL</th>
                 </tr>
             </thead>
             <tbody>
             {% for pub in publications %}
+                {% set created = pub['created_at']|string if pub['created_at'] else '' %}
+                {% set created_date = created[:10] if created|length >= 10 else '' %}
                 <tr>
                     <td>{{ pub['source'] }}</td>
-                    <td><strong>{{ pub['title'] }}</strong></td>
+                    <td>
+                        <strong>{{ pub['title'] }}</strong>
+                        {% if created_date and created_date >= dias_limite %}
+                            <span class="badge nueva">Nueva</span>
+                        {% endif %}
+                    </td>
                     <td><span class="badge {{ pub['category'] }}">{{ pub['category'] }}</span></td>
                     <td>{{ pub['date'] if pub['date'] else 'Pendiente' }}</td>
                     <td>
@@ -46,12 +89,12 @@
                         {% endif %}
                     </td>
                     <td><strong>{{ pub['norma'] }}</strong></td>
+                    <td class="fecha-incorporacion">{{ created_date if created_date else '—' }}</td>
                     <td><a href="{{ pub['url'] }}" target="_blank" class="url-link">Ver norma</a></td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
-    <p style="color:var(--texto-claro); font-size:0.85rem;">Total: {{ publications|length }} normas</p>
 </div>
 {% endblock %}

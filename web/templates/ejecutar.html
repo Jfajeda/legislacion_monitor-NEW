@@ -4,17 +4,253 @@
 <div class="page-header">
     <div class="container">
         <h1>Ejecutar Monitor</h1>
-        <p>Resultado de la verificación de normas</p>
+        <p>Verificacion de normas y deteccion de cambios</p>
     </div>
 </div>
 <div class="container">
-    <div class="alert-box success">
-        Verificación completada: {{ new_count }} nuevas normas encontradas de {{ total }} verificadas.
+
+    <!-- Boton de ejecucion -->
+    <div class="actions" id="actions">
+        <button id="btn-ejecutar" class="btn btn-green" onclick="lanzarScraping()">
+            Ejecutar verificacion
+        </button>
+        <a href="/legislacion" class="btn btn-primary">Ver legislacion</a>
+        <a href="/" class="btn btn-primary" style="background:var(--azul-oscuro);">Dashboard</a>
     </div>
-    
-    <div class="actions">
-        <a href="/legislacion" class="btn btn-primary">Ver legislación</a>
-        <a href="/ejecutar" class="btn btn-green">Ejecutar de nuevo</a>
+
+    <!-- Indicador de progreso -->
+    <div id="progress-box" class="alert-box" style="display:none; background:#e3f2fd; color:var(--azul-oscuro); border-left:4px solid var(--azul-principal);">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div class="spinner"></div>
+            <span id="progress-text">Verificando normas... Esto puede tardar unos segundos.</span>
+        </div>
     </div>
+
+    <!-- Resultado -->
+    <div id="result-box" style="display:none;"></div>
+
+    <!-- Ultimo resultado previo (si existe) -->
+    <div id="last-result-box" style="margin-top:20px;"></div>
+
 </div>
+
+<style>
+    .spinner {
+        width: 22px; height: 22px;
+        border: 3px solid var(--gris-borde);
+        border-top-color: var(--azul-principal);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        margin-bottom: 16px;
+    }
+    .result-card h3 {
+        font-family: 'Poppins', sans-serif;
+        color: var(--azul-oscuro);
+        margin-bottom: 12px;
+    }
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+    }
+    .stat-item {
+        text-align: center;
+        padding: 16px;
+        border-radius: 8px;
+        background: var(--gris-claro);
+    }
+    .stat-item .number {
+        font-family: 'Poppins', sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    .stat-item .label {
+        font-size: 0.8rem;
+        color: var(--texto-claro);
+        margin-top: 4px;
+    }
+    .stat-item.blue .number { color: var(--azul-principal); }
+    .stat-item.green .number { color: var(--verde-acento); }
+    .stat-item.orange .number { color: var(--naranja); }
+    .stat-item.red .number { color: var(--rojo); }
+
+    .error-box {
+        background: #ffebee;
+        color: var(--rojo);
+        border-left: 4px solid var(--rojo);
+        padding: 16px 24px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+    }
+    .timestamp {
+        font-size: 0.8rem;
+        color: var(--texto-claro);
+        margin-top: 8px;
+    }
+</style>
+
+<script>
+    let pollingInterval = null;
+
+    async function lanzarScraping() {
+        const btn = document.getElementById('btn-ejecutar');
+        const progressBox = document.getElementById('progress-box');
+        const resultBox = document.getElementById('result-box');
+
+        // Deshabilitar boton y mostrar progreso
+        btn.disabled = true;
+        btn.textContent = 'Ejecutando...';
+        btn.style.opacity = '0.6';
+        progressBox.style.display = 'block';
+        resultBox.style.display = 'none';
+        resultBox.innerHTML = '';
+
+        try {
+            const resp = await fetch('/ejecutar', { method: 'POST' });
+            const data = await resp.json();
+
+            if (!resp.ok || !data.started) {
+                progressBox.style.display = 'none';
+                resultBox.style.display = 'block';
+                resultBox.innerHTML = `<div class="error-box">${data.reason || 'No se pudo iniciar el scraping'}</div>`;
+                resetBoton();
+                return;
+            }
+
+            // Iniciar polling cada 2 segundos
+            pollingInterval = setInterval(consultarEstado, 2000);
+
+        } catch (err) {
+            progressBox.style.display = 'none';
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = `<div class="error-box">Error de conexion: ${err.message}</div>`;
+            resetBoton();
+        }
+    }
+
+    async function consultarEstado() {
+        try {
+            const resp = await fetch('/estado-scraping');
+            const data = await resp.json();
+
+            if (!data.running && data.last_result) {
+                // Scraping terminado — parar polling y mostrar resultado
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+                mostrarResultado(data.last_result);
+                document.getElementById('progress-box').style.display = 'none';
+                resetBoton();
+            }
+        } catch (err) {
+            // Silenciar errores de red durante polling
+        }
+    }
+
+    function mostrarResultado(result) {
+        const box = document.getElementById('result-box');
+        box.style.display = 'block';
+
+        if (result.error || !result.ok) {
+            box.innerHTML = `
+                <div class="error-box">
+                    <strong>Error durante la verificacion:</strong><br>
+                    ${result.error || 'Error desconocido'}
+                    <div class="timestamp">${result.timestamp || ''}</div>
+                </div>`;
+            return;
+        }
+
+        const existentes = result.total - result.new_count;
+        box.innerHTML = `
+            <div class="result-card">
+                <h3>Verificacion completada</h3>
+                <div class="stat-grid">
+                    <div class="stat-item blue">
+                        <div class="number">${result.total}</div>
+                        <div class="label">Normas verificadas</div>
+                    </div>
+                    <div class="stat-item green">
+                        <div class="number">${result.new_count}</div>
+                        <div class="label">Nuevas incorporadas</div>
+                    </div>
+                    <div class="stat-item orange">
+                        <div class="number">${result.changed_count || 0}</div>
+                        <div class="label">Con cambios detectados</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">${existentes}</div>
+                        <div class="label">Ya existentes en BD</div>
+                    </div>
+                </div>
+                <div class="timestamp">Ultima ejecucion: ${result.timestamp}</div>
+            </div>`;
+    }
+
+    function resetBoton() {
+        const btn = document.getElementById('btn-ejecutar');
+        btn.disabled = false;
+        btn.textContent = 'Ejecutar verificacion';
+        btn.style.opacity = '1';
+    }
+
+    // Al cargar la pagina, consultar si hay un scraping en curso o resultado previo
+    async function cargarEstadoInicial() {
+        try {
+            const resp = await fetch('/estado-scraping');
+            const data = await resp.json();
+
+            if (data.running) {
+                // Scraping en curso — mostrar progreso y empezar polling
+                const btn = document.getElementById('btn-ejecutar');
+                btn.disabled = true;
+                btn.textContent = 'Ejecutando...';
+                btn.style.opacity = '0.6';
+                document.getElementById('progress-box').style.display = 'block';
+                pollingInterval = setInterval(consultarEstado, 2000);
+            } else if (data.last_result) {
+                // Mostrar ultimo resultado
+                const box = document.getElementById('last-result-box');
+                const r = data.last_result;
+                if (r.ok) {
+                    const existentes = r.total - r.new_count;
+                    box.innerHTML = `
+                        <div class="result-card" style="opacity:0.75;">
+                            <h3>Ultima ejecucion</h3>
+                            <div class="stat-grid">
+                                <div class="stat-item blue">
+                                    <div class="number">${r.total}</div>
+                                    <div class="label">Normas verificadas</div>
+                                </div>
+                                <div class="stat-item green">
+                                    <div class="number">${r.new_count}</div>
+                                    <div class="label">Nuevas incorporadas</div>
+                                </div>
+                                <div class="stat-item orange">
+                                    <div class="number">${r.changed_count || 0}</div>
+                                    <div class="label">Con cambios detectados</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="number">${existentes}</div>
+                                    <div class="label">Ya existentes en BD</div>
+                                </div>
+                            </div>
+                            <div class="timestamp">Ejecutado: ${r.timestamp}</div>
+                        </div>`;
+                }
+            }
+        } catch (err) {
+            // Sin conexion al servidor
+        }
+    }
+
+    cargarEstadoInicial();
+</script>
 {% endblock %}

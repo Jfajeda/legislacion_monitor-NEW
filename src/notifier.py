@@ -1,6 +1,7 @@
 import smtplib
 import logging
 import os
+from html import escape as html_escape
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List, Dict, Any
@@ -55,14 +56,15 @@ class Notifier:
 """
         
         for pub in publications:
+            safe_url = html_escape(pub.get('url', '#'), quote=True)
             body += f"""
     <div class="pub">
-        <span class="source">{pub.get('source', 'N/A').upper()}</span>
-        <span class="category">{pub.get('category', 'N/A')}</span>
-        <h3>{pub.get('title', 'Sin título')}</h3>
-        <p class="date">Fecha: {pub.get('date', 'N/A')}</p>
-        <p>{pub.get('summary', 'Sin descripción')}</p>
-        <p><a href="{pub.get('url', '#')}">Ver publicación completa</a></p>
+        <span class="source">{html_escape(pub.get('source', 'N/A').upper())}</span>
+        <span class="category">{html_escape(pub.get('category', 'N/A'))}</span>
+        <h3>{html_escape(pub.get('title', 'Sin título'))}</h3>
+        <p class="date">Fecha: {html_escape(pub.get('date', 'N/A'))}</p>
+        <p>{html_escape(pub.get('summary', 'Sin descripción'))}</p>
+        <p><a href="{safe_url}">Ver publicación completa</a></p>
     </div>
 """
         
