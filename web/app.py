@@ -7,10 +7,11 @@ import sys
 import os
 import logging
 import threading
+from functools import wraps
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, render_template, jsonify, request, send_file
+from flask import Flask, render_template, jsonify, request, send_file, abort, Response
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -30,6 +31,26 @@ log = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(32).hex())
+
+# --- Autenticación básica para endpoints sensibles -------------------------
+
+_EXPORT_USER = os.environ.get('EXPORT_USER', 'codanor')
+_EXPORT_PASS = os.environ.get('EXPORT_PASS', 'legislacion2026')
+
+
+def _require_auth(f):
+    """Decorador de autenticación HTTP Basic para rutas sensibles."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or auth.username != _EXPORT_USER or auth.password != _EXPORT_PASS:
+            return Response(
+                'Acceso no autorizado. Introduce tus credenciales.',
+                401,
+                {'WWW-Authenticate': 'Basic realm="Legislacion Monitor"'},
+            )
+        return f(*args, **kwargs)
+    return decorated
 
 # --- Configuracion global ------------------------------------------------
 
@@ -129,6 +150,10 @@ def ejecutar():
 @app.route('/ejecutar', methods=['POST'])
 def ejecutar_post():
     """Lanza scraping en segundo plano (llamado via fetch desde JS)."""
+    # Verificar que la petición es AJAX legítima (mitigación CSRF sin dependencia extra)
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        abort(403)
+
     if _scrape_status['running']:
         return jsonify({'started': False, 'reason': 'Ya hay un scraping en ejecucion'}), 409
 
@@ -147,6 +172,7 @@ def estado_scraping():
 
 
 @app.route('/exportar')
+@_require_auth
 def exportar():
     from src.export_excel import export_to_excel_formatted
     

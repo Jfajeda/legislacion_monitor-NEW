@@ -98,6 +98,13 @@
 </style>
 
 <script>
+    // Función de escape XSS — sanitiza strings antes de insertarlos en innerHTML
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str == null ? '' : String(str);
+      return d.innerHTML;
+    }
+
     let pollingInterval = null;
 
     async function lanzarScraping() {
@@ -114,13 +121,16 @@
         resultBox.innerHTML = '';
 
         try {
-            const resp = await fetch('/ejecutar', { method: 'POST' });
+            const resp = await fetch('/ejecutar', {
+              method: 'POST',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
             const data = await resp.json();
 
             if (!resp.ok || !data.started) {
                 progressBox.style.display = 'none';
                 resultBox.style.display = 'block';
-                resultBox.innerHTML = `<div class="error-box">${data.reason || 'No se pudo iniciar el scraping'}</div>`;
+                resultBox.innerHTML = `<div class="error-box">${escapeHtml(data.reason || 'No se pudo iniciar el scraping')}</div>`;
                 resetBoton();
                 return;
             }
@@ -131,7 +141,7 @@
         } catch (err) {
             progressBox.style.display = 'none';
             resultBox.style.display = 'block';
-            resultBox.innerHTML = `<div class="error-box">Error de conexion: ${err.message}</div>`;
+            resultBox.innerHTML = `<div class="error-box">Error de conexion: ${escapeHtml(err.message)}</div>`;
             resetBoton();
         }
     }
@@ -162,8 +172,8 @@
             box.innerHTML = `
                 <div class="error-box">
                     <strong>Error durante la verificacion:</strong><br>
-                    ${result.error || 'Error desconocido'}
-                    <div class="timestamp">${result.timestamp || ''}</div>
+                    ${escapeHtml(result.error || 'Error desconocido')}
+                    <div class="timestamp">${escapeHtml(result.timestamp || '')}</div>
                 </div>`;
             return;
         }
@@ -174,23 +184,23 @@
                 <h3>Verificacion completada</h3>
                 <div class="stat-grid">
                     <div class="stat-item blue">
-                        <div class="number">${result.total}</div>
+                        <div class="number">${parseInt(result.total) || 0}</div>
                         <div class="label">Normas verificadas</div>
                     </div>
                     <div class="stat-item green">
-                        <div class="number">${result.new_count}</div>
+                        <div class="number">${parseInt(result.new_count) || 0}</div>
                         <div class="label">Nuevas incorporadas</div>
                     </div>
                     <div class="stat-item orange">
-                        <div class="number">${result.changed_count || 0}</div>
+                        <div class="number">${parseInt(result.changed_count) || 0}</div>
                         <div class="label">Con cambios detectados</div>
                     </div>
                     <div class="stat-item">
-                        <div class="number">${existentes}</div>
+                        <div class="number">${parseInt(existentes) || 0}</div>
                         <div class="label">Ya existentes en BD</div>
                     </div>
                 </div>
-                <div class="timestamp">Ultima ejecucion: ${result.timestamp}</div>
+                <div class="timestamp">Ultima ejecucion: ${escapeHtml(result.timestamp)}</div>
             </div>`;
     }
 
