@@ -59,3 +59,7 @@
 
 - Monitor de legislacion: seguimiento de cambios normativos relevantes para consultoria.
 - Contiene codigo Python y HTML.
+
+---
+
+> **Revisado 2026-11-13** — sin cambios de código en esta sesión (trabajo centrado en `Plataforma_Seguimiento_Proyectos`).
